@@ -30,6 +30,7 @@ from ..validate import SCHEMA_HASS_CONFIG
 from .api import HomeAssistantAPI
 from .core import HomeAssistantCore
 from .secrets import HomeAssistantSecrets
+from .ws import HomeAssistantWS
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class HomeAssistant(JsonConfig, CoreSysAttributes):
         super().__init__(FILE_HASSIO_HOMEASSISTANT, SCHEMA_HASS_CONFIG)
         self.coresys: CoreSys = coresys
         self._api: HomeAssistantAPI = HomeAssistantAPI(coresys)
+        self._ws: HomeAssistantWS = HomeAssistantWS(coresys)
         self._core: HomeAssistantCore = HomeAssistantCore(coresys)
         self._secrets: HomeAssistantSecrets = HomeAssistantSecrets(coresys)
 
@@ -49,6 +51,11 @@ class HomeAssistant(JsonConfig, CoreSysAttributes):
     def api(self) -> HomeAssistantAPI:
         """Return API handler for core."""
         return self._api
+
+    @property
+    def ws(self) -> HomeAssistantWS:
+        """Return Websocket handler for core."""
+        return self._ws
 
     @property
     def core(self) -> HomeAssistantCore:
@@ -230,6 +237,7 @@ class HomeAssistant(JsonConfig, CoreSysAttributes):
     async def load(self) -> None:
         """Prepare Home Assistant object."""
         await asyncio.wait([self.secrets.load(), self.core.load()])
+        self._ws = await self.api.get_ws_client()
 
     def write_pulse(self):
         """Write asound config to file and return True on success."""

@@ -39,6 +39,10 @@ class HomeAssistantAuthError(HomeAssistantAPIError):
     """Home Assistant Auth API exception."""
 
 
+class HomeAssistantWSError(HomeAssistantAPIError):
+    """Home Assistant websocket error."""
+
+
 class HomeAssistantJobError(HomeAssistantError, JobException):
     """Raise on Home Assistant job error."""
 
