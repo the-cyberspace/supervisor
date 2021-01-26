@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 import aiohttp
+from awesomeversion import AwesomeVersion
 
 from ..coresys import CoreSys, CoreSysAttributes
 from ..exceptions import HomeAssistantAPIError, HomeAssistantWSError
@@ -10,37 +11,12 @@ from ..exceptions import HomeAssistantAPIError, HomeAssistantWSError
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
-class HomeAssistantWebSocket(CoreSysAttributes):
-    """Home Assistant Websocket API."""
-
-    def __init__(self, coresys: CoreSys):
-        """Initialize Home Assistant object."""
-        self.coresys: CoreSys = coresys
-        self._client: Optional["WSClient"] = None
-
-    async def _get_ws_client(self) -> "WSClient":
-        """Return a websocket client."""
-        await self.sys_homeassistant.api.ensure_access_token()
-        return await WSClient.connect_with_auth(
-            self.sys_websession_ssl,
-            f"{self.sys_homeassistant.api_url}/api/websocket",
-            self.sys_homeassistant.api.access_token,
-        )
-
-    async def send_command(self, msg):
-        """Send a command with the WS client."""
-        if not self._client:
-            self._client = await self._get_ws_client()
-        try:
-            return await self._client.send_command(msg)
-        except HomeAssistantAPIError as err:
-            raise HomeAssistantWSError from err
-
-
 class WSClient:
     """Home Assistant Websocket client."""
 
-    def __init__(self, ha_version: str, client: aiohttp.ClientWebSocketResponse):
+    def __init__(
+        self, ha_version: AwesomeVersion, client: aiohttp.ClientWebSocketResponse
+    ):
         """Initialise the WS client."""
         self.ha_version = ha_version
         self.client = client
@@ -87,4 +63,31 @@ class WSClient:
         if auth_ok_msg["type"] != "auth_ok":
             raise HomeAssistantAPIError("AUTH NOT OK")
 
-        return cls(hello_msg["ha_version"], client)
+        return cls(AwesomeVersion(hello_msg["ha_version"]), client)
+
+
+class HomeAssistantWebSocket(CoreSysAttributes):
+    """Home Assistant Websocket API."""
+
+    def __init__(self, coresys: CoreSys):
+        """Initialize Home Assistant object."""
+        self.coresys: CoreSys = coresys
+        self._client: Optional[WSClient] = None
+
+    async def _get_ws_client(self) -> WSClient:
+        """Return a websocket client."""
+        await self.sys_homeassistant.api.ensure_access_token()
+        return await WSClient.connect_with_auth(
+            self.sys_websession_ssl,
+            f"{self.sys_homeassistant.api_url}/api/websocket",
+            self.sys_homeassistant.api.access_token,
+        )
+
+    async def send_command(self, msg):
+        """Send a command with the WS client."""
+        if not self._client:
+            self._client = await self._get_ws_client()
+        try:
+            return await self._client.send_command(msg)
+        except HomeAssistantAPIError as err:
+            raise HomeAssistantWSError from err
