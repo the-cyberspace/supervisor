@@ -30,7 +30,7 @@ from ..validate import SCHEMA_HASS_CONFIG
 from .api import HomeAssistantAPI
 from .core import HomeAssistantCore
 from .secrets import HomeAssistantSecrets
-from .ws import HomeAssistantWS
+from .websocket import HomeAssistantWebSocket
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class HomeAssistant(JsonConfig, CoreSysAttributes):
         super().__init__(FILE_HASSIO_HOMEASSISTANT, SCHEMA_HASS_CONFIG)
         self.coresys: CoreSys = coresys
         self._api: HomeAssistantAPI = HomeAssistantAPI(coresys)
-        self._websocket: HomeAssistantWS = HomeAssistantWS(coresys)
+        self._websocket: HomeAssistantWebSocket = HomeAssistantWebSocket(coresys)
         self._core: HomeAssistantCore = HomeAssistantCore(coresys)
         self._secrets: HomeAssistantSecrets = HomeAssistantSecrets(coresys)
 
@@ -53,7 +53,7 @@ class HomeAssistant(JsonConfig, CoreSysAttributes):
         return self._api
 
     @property
-    def websocket(self) -> HomeAssistantWS:
+    def websocket(self) -> HomeAssistantWebSocket:
         """Return Websocket handler for core."""
         return self._websocket
 

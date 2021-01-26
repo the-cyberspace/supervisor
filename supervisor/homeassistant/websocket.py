@@ -10,7 +10,7 @@ from ..exceptions import HomeAssistantAPIError, HomeAssistantWSError
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
-class HomeAssistantWS(CoreSysAttributes):
+class HomeAssistantWebSocket(CoreSysAttributes):
     """Home Assistant Websocket API."""
 
     def __init__(self, coresys: CoreSys):
