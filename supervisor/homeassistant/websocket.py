@@ -1,6 +1,6 @@
 """Home Assistant Websocket API."""
 import logging
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import aiohttp
 from awesomeversion import AwesomeVersion
@@ -22,7 +22,7 @@ class WSClient:
         self.client = client
         self.msg_id = 0
 
-    async def send_command(self, msg):
+    async def send_command(self, msg: Dict[str, Any]):
         """Send a websocket command."""
         self.msg_id += 1
         msg["id"] = self.msg_id
@@ -85,6 +85,9 @@ class HomeAssistantWebSocket(CoreSysAttributes):
 
     async def send_command(self, msg):
         """Send a command with the WS client."""
+        if self.sys_homeassistant.version < "2021.2.0":
+            # No websocket suppport
+            return
         if not self._client:
             self._client = await self._get_ws_client()
         try:
